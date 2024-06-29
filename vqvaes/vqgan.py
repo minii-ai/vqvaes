@@ -1,0 +1,2 @@
+class VQGAN:
+    pass
