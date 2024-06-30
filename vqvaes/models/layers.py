@@ -3,6 +3,12 @@ import torch.nn as nn
 
 
 class ResidualBlock(nn.Module):
+    """
+    Passes input of size `in_channels` through 2 conv layers and adds an residual connection to input.
+
+    Returns a tensor of the same size as the input.
+    """
+
     def __init__(self, in_channels: int, channels: int):
         super().__init__()
         self.conv = nn.Sequential(
@@ -48,6 +54,11 @@ class Encoder(nn.Module):
         num_residual_channels: int,
     ):
         super().__init__()
+        self.in_channels = in_channels
+        self.num_channels = num_channels
+        self.num_residual_blocks = num_residual_blocks
+        self.num_residual_channels = num_residual_channels
+
         self.encoder = nn.Sequential(
             nn.Conv2d(
                 in_channels, num_channels // 2, kernel_size=4, stride=2, padding=1
