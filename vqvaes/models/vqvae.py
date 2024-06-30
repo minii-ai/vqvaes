@@ -33,10 +33,7 @@ class VQVAE(nn.Module):
         x = rearrange(x, "b c h w -> b h w c")
         vq_result = self.vq(x)
         quantized = rearrange(vq_result["quantized"], "b h w c -> b c h w")
-        result = {
-            **vq_result,
-            "quantized": quantized,
-        }
+        result = {**vq_result, "quantized": quantized}
 
         return result
 
