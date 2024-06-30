@@ -3,7 +3,7 @@ from datasets import load_dataset
 from torch.utils.data import DataLoader, Dataset
 
 
-def make_dataset(train_size: float = 0.9, seed: int = 0, transform=None):
+def make_datasets(train_size: float = 0.9, seed: int = 0, transform=None):
     dataset = load_dataset("m1guelpf/nouns", split="train")
     splits = dataset.train_test_split(train_size=train_size, seed=seed, shuffle=True)
     train, test = splits["train"], splits["test"]

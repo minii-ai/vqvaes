@@ -32,8 +32,8 @@ class VQVAE(nn.Module):
         # pass encoder output thr. vq layer
         x = rearrange(x, "b c h w -> b h w c")
         vq_result = self.vq(x)
-        quantized = rearrange(vq_result["quantized"], "b h w c -> b c h w")
-        result = {**vq_result, "quantized": quantized}
+        quantized = rearrange(vq_result["quantize"], "b h w c -> b c h w")
+        result = {**vq_result, "quantize": quantized}
 
         return result
 
@@ -42,7 +42,7 @@ class VQVAE(nn.Module):
 
     def forward(self, inputs: torch.Tensor):
         vq_result = self.encode(inputs)
-        quantized = vq_result["quantized"]
+        quantized = vq_result["quantize"]
         recon = self.decode(quantized)
 
         return recon, vq_result

@@ -20,19 +20,14 @@ class VQ(nn.Module):
         self.codebook_size = codebook_size
         self.codebook_dim = codebook_dim
         self.commitment_cost = commitment_cost
+
         self.codebook = nn.Embedding(codebook_size, codebook_dim)
+        self.codebook.weight.data.uniform_(
+            -1 / self.codebook_size, 1 / self.codebook_size
+        )
 
     def quantize(self, codebook_indicies: torch.Tensor):
         return self.codebook.weight[codebook_indicies]
-
-    def get_loss(self, inputs: torch.Tensor, quantized: torch.Tensor):
-        # codebook loss: move quantized closer to inputs (encoder outputs), updates dictionary
-        codebook_loss = F.mse_loss(quantized, inputs.detach())
-
-        # commitment loss: move inputs (encoder outputs) closer to quantized embedding, updates encoder
-        commitment_loss = self.commitment_cost * F.mse_loss(inputs, quantized.detach())
-
-        return codebook_loss + commitment_loss
 
     def forward(self, inputs: torch.Tensor):
         """
@@ -42,7 +37,7 @@ class VQ(nn.Module):
         assert inputs.shape[-1] == self.codebook_dim
         original_shape = inputs.shape  # keep track of input shape
 
-        # flatten encoding: (B, ..., D) -> ((B, ...), 1, D)
+        # flatten inputs
         flat_inputs = rearrange(inputs, "b ... d -> (b ...) 1 d")
         codebook = self.codebook.weight.unsqueeze(0)  # (1, S, D)
 
@@ -54,13 +49,15 @@ class VQ(nn.Module):
         codes = self.quantize(codebook_indices)
 
         # reshape back to original shape
-        quantized = codes.view(original_shape)
-
-        # copy gradients from quantized to inputs
-        quantized = inputs + (quantized - inputs).detach()
+        quantize = codes.view(original_shape)
 
         # loss = codebook + commitment
-        loss = self.get_loss(inputs, quantized)
+        codebook_loss = F.mse_loss(quantize, inputs.detach())
+        commitment_loss = F.mse_loss(quantize.detach(), inputs)
+        loss = codebook_loss + self.commitment_cost * commitment_loss
+
+        # copy gradients from quantized to inputs
+        quantize = inputs + (quantize - inputs).detach()
 
         # perplexity = 2^cross_entropy
         one_hot_codes = (
@@ -71,4 +68,4 @@ class VQ(nn.Module):
         avg_probs = one_hot_codes.mean(dim=0)
         perplexity = torch.exp(torch.sum(avg_probs * -torch.log(avg_probs + 1e-10)))
 
-        return {"quantized": quantized, "loss": loss, "perplexity": perplexity}
+        return {"quantize": quantize, "loss": loss, "perplexity": perplexity}
