@@ -15,6 +15,7 @@ class VQVAETrainer:
         lr: float = 1e-4,
         iterations: int = 100000,
         weight_decay: float = 0.0,
+        checkpoint_every: int = 1000,
         device: str = "cpu",
     ):
         self.vqvae = vqvae
