@@ -18,6 +18,12 @@ class VQVAE(nn.Module):
         decoder: Decoder,
     ):
         super().__init__()
+        self.num_channels = encoder.num_channels
+        self.num_residual_blocks = encoder.num_residual_blocks
+        self.num_residual_channels = encoder.num_residual_channels
+        self.codebook_size = vq.codebook_size
+        self.codebook_dim = vq.codebook_dim
+
         self.encoder = encoder
         self.pre_vq = nn.Conv2d(
             encoder.num_channels, vq.codebook_dim, kernel_size=1, stride=1, padding=0

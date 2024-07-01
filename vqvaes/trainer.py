@@ -60,6 +60,9 @@ class VQVAETrainer:
                 "codebook_dim": self.vqvae.codebook_dim,
             }
 
+            with open(config_path, "w") as f:
+                json.dump(model_config, f)
+
         vqvae = self.vqvae
         vqvae.to(self.device)
 
@@ -104,14 +107,6 @@ class VQVAETrainer:
 
                         if self.writer:
                             test_evals = evaluate_vqvae(self.test_loader, vqvae)
-
-                            # self.writer.add_scalar("loss/test", test_evals["loss"], i)
-                            # self.writer.add_scalar(
-                            #     "perplexity/test", test_evals["perplexity"], i
-                            # )
-                            # self.writer.add_scalar(
-                            #     "recon_loss/test", test_evals["recon_loss"], i
-                            # )
 
                             self.writer.add_scalars(
                                 "loss", {"test": test_evals["loss"]}, i

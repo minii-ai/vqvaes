@@ -5,7 +5,7 @@ from torchvision.transforms import v2
 
 
 def make_datasets(
-    train_size: float = 0.9,
+    train_size: float = 0.8,
     seed: int = 0,
     image_size: int = 128,
     normalize: bool = True,

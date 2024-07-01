@@ -22,9 +22,9 @@ class VQ(nn.Module):
         self.commitment_cost = commitment_cost
 
         self.codebook = nn.Embedding(codebook_size, codebook_dim)
-        self.codebook.weight.data.uniform_(
-            -1 / self.codebook_size, 1 / self.codebook_size
-        )
+
+        # initialize codebook using uniform dist.
+        nn.init.uniform_(self.codebook.weight, -1 / codebook_size, 1 / codebook_size)
 
     def quantize(self, codebook_indicies: torch.Tensor):
         return self.codebook.weight[codebook_indicies]
@@ -38,11 +38,15 @@ class VQ(nn.Module):
         original_shape = inputs.shape  # keep track of input shape
 
         # flatten inputs
-        flat_inputs = rearrange(inputs, "b ... d -> (b ...) 1 d")
-        codebook = self.codebook.weight.unsqueeze(0)  # (1, S, D)
+        flat_inputs = rearrange(inputs, "b ... d -> (b ...) d")  # (B..., D)
+        codebook = self.codebook.weight  # (S, D)
 
         # compute pairwise l2^2 distance from encoding to all codebook codes
-        distances = torch.sum((flat_inputs - codebook) ** 2, dim=-1)
+        distances = (
+            torch.sum(flat_inputs**2, dim=-1, keepdim=True)
+            - 2 * flat_inputs @ codebook.T
+            + torch.sum(codebook**2, dim=-1, keepdim=True).T
+        )
 
         # get closest code
         codebook_indices = torch.argmin(distances, dim=-1)
