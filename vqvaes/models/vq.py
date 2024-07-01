@@ -66,6 +66,6 @@ class VQ(nn.Module):
             .to(inputs.device)
         )
         avg_probs = one_hot_codes.mean(dim=0)
-        perplexity = torch.exp(torch.sum(avg_probs * -torch.log(avg_probs + 1e-10)))
+        perplexity = torch.exp(-torch.sum(avg_probs * torch.log(avg_probs + 1e-10)))
 
         return {"quantize": quantize, "loss": loss, "perplexity": perplexity}

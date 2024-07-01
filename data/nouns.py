@@ -1,14 +1,30 @@
 import torch
 from datasets import load_dataset
 from torch.utils.data import DataLoader, Dataset
+from torchvision.transforms import v2
 
 
-def make_datasets(train_size: float = 0.9, seed: int = 0, transform=None):
+def make_datasets(
+    train_size: float = 0.9,
+    seed: int = 0,
+    image_size: int = 128,
+    normalize: bool = True,
+):
     dataset = load_dataset("m1guelpf/nouns", split="train")
     splits = dataset.train_test_split(train_size=train_size, seed=seed, shuffle=True)
     train, test = splits["train"], splits["test"]
-    train_set, test_set = NounsDataset(train, transform), NounsDataset(test, transform)
+    transform = [
+        v2.Resize((image_size, image_size)),
+        v2.ToImage(),
+        v2.ToDtype(torch.float32, scale=True),
+    ]
 
+    if normalize:
+        transform.append(v2.Normalize((0.5,), (0.5,)))
+
+    transform = v2.Compose(transform)
+
+    train_set, test_set = NounsDataset(train, transform), NounsDataset(test, transform)
     return train_set, test_set
 
 

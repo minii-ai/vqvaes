@@ -1,3 +1,5 @@
+import io
+
 import matplotlib.pyplot as plt
 import torch
 from PIL import Image
@@ -14,6 +16,7 @@ def evaluate_vqvae(dataloader: DataLoader, model: VQVAE):
     Evaluates VQVAE's loss and perplexity over a dataloader
     """
     loss = 0
+    recon_loss = 0
     perplexity = 0
 
     device = next(model.parameters())
@@ -23,22 +26,30 @@ def evaluate_vqvae(dataloader: DataLoader, model: VQVAE):
         for batch in tqdm(dataloader, desc="Evaluating VQVAE"):
             images = batch["images"].to(device)
             recon, vq_result = model(images)
-            batch_loss = vqvae_loss(recon, vq_result, images)
+            batch_recon_loss, batch_loss = vqvae_loss(recon, vq_result, images)
             batch_perplexity = vq_result["perplexity"]
 
             loss += batch_loss.item()
+            recon_loss += batch_recon_loss.item()
             perplexity += batch_perplexity.item()
 
     loss /= len(dataloader)
     perplexity /= len(dataloader)
 
-    return {"loss": loss, "perplexity": perplexity}
+    return {"loss": loss, "recon_loss": recon_loss, "perplexity": perplexity}
+
+
+def figure_to_image(figure):
+    """Convert a Matplotlib figure to a PIL Image and return it"""
+    buf = io.BytesIO()
+    figure.savefig(buf, format="png", bbox_inches="tight")
+    buf.seek(0)
+    image = Image.open(buf)
+    return image
 
 
 def evaluate_vqvae_recon(
-    dataset: Dataset,
-    indices: list[int],
-    model: VQVAE,
+    dataset: Dataset, indices: list[int], model: VQVAE, normalize: bool = True
 ):
     """
     Evaluates VQVAE by comparing original images to their reconstructions.
@@ -54,8 +65,12 @@ def evaluate_vqvae_recon(
         recon, _ = model(images)
 
     grid_size = int(len(indices) ** 0.5)
-    orig_grid = make_grid(images.cpu(), nrow=grid_size, value_range=(-1, 1))
-    recon_grid = make_grid(recon.cpu(), nrow=grid_size, value_range=(-1, 1))
+    orig_grid = make_grid(
+        images.cpu(), nrow=grid_size, value_range=(-1, 1), normalize=normalize
+    )
+    recon_grid = make_grid(
+        recon.cpu(), nrow=grid_size, value_range=(-1, 1), normalize=normalize
+    )
 
     # Combine the grids horizontally
     combined_grid = torch.cat([orig_grid, recon_grid], dim=2)
@@ -88,4 +103,4 @@ def evaluate_vqvae_recon(
     )
 
     plt.tight_layout()
-    return fig
+    return figure_to_image(fig)
