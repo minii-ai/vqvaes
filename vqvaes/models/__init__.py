@@ -27,6 +27,7 @@ def build_vqvae(
     commitment_cost: float = 0.25,
     use_ema: bool = False,
     decay: float = 0.99,
+    **kwargs,
 ) -> VQVAE:
     encoder = Encoder(
         in_channels=in_channels,

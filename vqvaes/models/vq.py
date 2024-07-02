@@ -58,9 +58,10 @@ class VectorQuantize(nn.Module):
         # reshape back to original shape
         quantize = codes.view(original_shape)
 
-        # commitment loss
+        # loss
+        codebook_loss = F.mse_loss(quantize, inputs.detach())
         commitment_loss = F.mse_loss(quantize.detach(), inputs)
-        loss = self.commitment_cost * commitment_loss
+        loss = codebook_loss + self.commitment_cost * commitment_loss
 
         one_hot_codes = (
             F.one_hot(codebook_indices, self.codebook_size)
@@ -161,15 +162,13 @@ class VectorQuantizeEMA(nn.Module):
                 * n
             )
 
-            cluster_mean = one_hot_codes.T @ flat_inputs
+            cluster_mean = one_hot_codes.T @ flat_inputs.detach()
             self.ema_cluster_mean = (
                 self.ema_cluster_mean * self.decay + cluster_mean * (1 - self.decay)
             )
 
             new_codebook = self.ema_cluster_mean / self.ema_cluster_size.unsqueeze(-1)
-            self.codebook.weight = nn.Parameter(new_codebook)
-
-            # raise RuntimeError
+            self.codebook.weight = nn.Parameter(new_codebook, requires_grad=False)
 
         # copy gradients from quantized to inputs
         quantize = inputs + (quantize - inputs).detach()

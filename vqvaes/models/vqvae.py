@@ -34,6 +34,7 @@ class VQVAE(nn.Module):
         decay = self.vq.decay if use_ema else None
 
         return {
+            "in_channels": self.encoder.in_channels,
             "num_channels": self.encoder.num_channels,
             "num_residual_blocks": self.encoder.num_residual_blocks,
             "num_residual_channels": self.encoder.num_residual_channels,
