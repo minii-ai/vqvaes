@@ -3,7 +3,7 @@ import json
 import torch
 
 from .layers import Decoder, Encoder
-from .vq import VQ
+from .vq import VectorQuantize, VectorQuantizeEMA
 from .vqvae import VQVAE
 
 
@@ -24,6 +24,9 @@ def build_vqvae(
     num_residual_channels: int,
     codebook_size: int,
     codebook_dim: int,
+    commitment_cost: float = 0.25,
+    use_ema: bool = False,
+    decay: float = 0.99,
 ) -> VQVAE:
     encoder = Encoder(
         in_channels=in_channels,
@@ -32,10 +35,19 @@ def build_vqvae(
         num_residual_channels=num_residual_channels,
     )
 
-    vq = VQ(
-        codebook_size=codebook_size,
-        codebook_dim=codebook_dim,
-    )
+    if use_ema:
+        vq = VectorQuantizeEMA(
+            codebook_size=codebook_size,
+            codebook_dim=codebook_dim,
+            commitment_cost=commitment_cost,
+            decay=decay,
+        )
+    else:
+        vq = VectorQuantize(
+            codebook_size=codebook_size,
+            codebook_dim=codebook_dim,
+            commitment_cost=commitment_cost,
+        )
 
     decoder = Decoder(
         in_channels=codebook_dim,

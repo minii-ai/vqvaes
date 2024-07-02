@@ -21,6 +21,7 @@ def parse_args():
     parser.add_argument("--num_residual_channels", type=int, default=32)
     parser.add_argument("--codebook_size", type=int, default=128)
     parser.add_argument("--codebook_dim", type=int, default=16)
+    parser.add_argument("--use_ema", action="store_true", default=False)
 
     default_checkpoint = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "../checkpoints/vqvae"
@@ -62,6 +63,7 @@ def main(args):
         num_residual_channels=args.num_residual_channels,
         codebook_size=args.codebook_size,
         codebook_dim=args.codebook_dim,
+        use_ema=args.use_ema,
     )
 
     # create trainer

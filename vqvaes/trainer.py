@@ -51,14 +51,7 @@ class VQVAETrainer:
         if self.save_dir:
             # save model config
             config_path = os.path.join(self.save_dir, "config.json")
-            model_config = {
-                "in_channels": 3,
-                "num_channels": self.vqvae.num_channels,
-                "num_residual_blocks": self.vqvae.num_residual_blocks,
-                "num_residual_channels": self.vqvae.num_residual_channels,
-                "codebook_size": self.vqvae.codebook_size,
-                "codebook_dim": self.vqvae.codebook_dim,
-            }
+            model_config = self.vqvae.config
 
             with open(config_path, "w") as f:
                 json.dump(model_config, f)
@@ -77,7 +70,7 @@ class VQVAETrainer:
                 for data in self.train_loader:
                     vqvae.train()
                     images = data["images"].to(self.device)
-                    recon, vq_result = vqvae(images)
+                    recon, vq_result = vqvae(images, is_training=True)
                     perplexity = vq_result["perplexity"]
 
                     # calculate loss
