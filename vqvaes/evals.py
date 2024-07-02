@@ -35,6 +35,7 @@ def evaluate_vqvae(dataloader: DataLoader, model: VQVAE):
 
     loss /= len(dataloader)
     perplexity /= len(dataloader)
+    recon_loss /= len(dataloader)
 
     return {"loss": loss, "recon_loss": recon_loss, "perplexity": perplexity}
 
@@ -104,3 +105,43 @@ def evaluate_vqvae_recon(
 
     plt.tight_layout()
     return figure_to_image(fig)
+
+
+def interpolate_images_vqvae(
+    model: VQVAE, image1: torch.Tensor, image2: torch.Tensor, num_steps: int = 3
+):
+    device = next(model.parameters()).device
+    model.eval()
+
+    # get latents
+    with torch.no_grad():
+        images = torch.stack([image1.to(device), image2.to(device)])
+        vq = model.encode(images)
+        latents = vq["quantize"]
+
+    latent1, latent2 = latents.chunk(2, dim=0)
+
+    # move latents to cpu
+    latent1 = latent1.cpu()
+    latent2 = latent2.cpu()
+
+    # linear interpolation (1 - w) * x1 + w * x2
+    ws = torch.linspace(0, 1, num_steps + 2).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
+    lerped_latents = (1 - ws) * latent1 + ws * latent2
+
+    # decode latents
+    with torch.no_grad():
+        lerped_images = model.decode(lerped_latents.cuda()).cpu()
+
+    # plot images to grid
+    grid_size = num_steps + 2
+    lerped_images_grid = make_grid(lerped_images, nrow=grid_size, normalize=True)
+
+    # Create figure and add a single subplot
+    fig, ax = plt.subplots(figsize=(20, 5))
+    ax.set_title("Interpolations")
+    ax.imshow(lerped_images_grid.permute(1, 2, 0))
+    ax.axis("off")
+    plt.subplots_adjust(wspace=0, hspace=0)
+
+    return fig

@@ -1,6 +1,20 @@
+import json
+
+import torch
+
 from .layers import Decoder, Encoder
 from .vq import VQ
 from .vqvae import VQVAE
+
+
+def load_vqvae(config_path: str, weights_path: str) -> VQVAE:
+    with open(config_path, "r") as f:
+        model_config = json.load(f)
+
+    model = build_vqvae(**model_config)
+    model.load_state_dict(torch.load(weights_path))
+
+    return model
 
 
 def build_vqvae(

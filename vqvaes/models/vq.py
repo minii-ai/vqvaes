@@ -73,3 +73,11 @@ class VQ(nn.Module):
         perplexity = torch.exp(-torch.sum(avg_probs * torch.log(avg_probs + 1e-10)))
 
         return {"quantize": quantize, "loss": loss, "perplexity": perplexity}
+
+
+class VectorQuantizeEMA(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self):
+        pass
