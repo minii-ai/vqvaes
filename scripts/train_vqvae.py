@@ -6,10 +6,8 @@ import torch
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../"))
 
-from torch.utils.data import Subset
-
 from data.nouns import create_dataloader, make_datasets
-from vqvaes.models import build_vqvae
+from vqvaes.models import VQVAE
 from vqvaes.trainer import VQVAETrainer
 
 
@@ -56,7 +54,7 @@ def main(args):
     test_loader = create_dataloader(test_set, batch_size=args.batch_size)
 
     # create model
-    vqvae = build_vqvae(
+    vqvae = VQVAE(
         in_channels=3,
         num_channels=args.num_channels,
         num_residual_blocks=args.num_residual_blocks,
