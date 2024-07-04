@@ -5,7 +5,7 @@ import torch.nn as nn
 from einops import rearrange
 
 from .layers import Decoder, Encoder
-from .vq import VectorQuantize, VectorQuantizeEMA
+from .vector_quantize import VectorQuantize, VectorQuantizeEMA
 
 
 class VQVAE(nn.Module):

@@ -3,7 +3,7 @@ import json
 import torch
 
 from .layers import Decoder, Encoder
-from .vq import VectorQuantize, VectorQuantizeEMA
+from .vector_quantize import VectorQuantize, VectorQuantizeEMA
 from .vqvae import VQVAE
 
 
